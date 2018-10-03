@@ -55,7 +55,6 @@ public class BuildFrame extends JFrame {
     public BuildFrame() {
         chooser = new JFileChooser();
         createListeners();
-       // createTextField();
         makePanels();
         setSize(FRAME_WIDTH, FRAME_HEIGHT);
     }
@@ -71,19 +70,18 @@ public class BuildFrame extends JFrame {
         };
         listener = new ClickListener();
     }
-    private void createTextField() {
-        findString = new JTextField(22);
-        replaceString = new JTextField(20);
-        //Font bigFont = findString.getFont().deriveFont(Font.PLAIN, 40f);
-        //Font bigFont2 = replaceString.getFont().deriveFont(Font.PLAIN, 40f);
 
-       // findString.setFont(bigFont);
-        //replaceString.setFont(bigFont2);
-
-        findString.addKeyListener(keyListener);
-        replaceString.addKeyListener(keyListener);
+    public class ClickListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getActionCommand() == "Find")
+                doFindText(findString.getText());
+            else if(e.getActionCommand() == "Replace")
+                doReplaceText(findString.getText(), replaceString.getText());
+            else if(e.getActionCommand() == "Cancel")
+                exitActionPerformed();
+        }
     }
-
 
     private void makePanels() {
 
@@ -105,12 +103,12 @@ public class BuildFrame extends JFrame {
     private void findTabPanel(){
         tab1TextArea = new JTextArea(5,20);
         tab1TextArea.setEditable(false);
+
         findLabel = new JLabel("Find: ");
         findLabel.setVisible(true);
 
-        findFirstTabString = new JTextField(20);
-        findFirstTabString.addKeyListener(keyListener);
-
+        findString = new JTextField(20);
+        findString.addKeyListener(keyListener);
 
         caseCheckBox = new JCheckBox("Match Case");
         wholeCheckBox = new JCheckBox("Whole Words");
@@ -122,13 +120,9 @@ public class BuildFrame extends JFrame {
         findButton.setBackground(Color.WHITE);
         findButton.addActionListener(listener);
 
-        findNext = new JButton("Find Next");
-        findNext.setBackground(Color.WHITE);
-        findNext.addActionListener(listener);
-        //findButton.addKeyListener(keyListener);
 
         findPanel.add(findLabel);
-        findPanel.add(findFirstTabString);
+        findPanel.add(findString);
         findPanel.add(findButton);
         //findPanel.add(findNext);
         findPanel.add(caseCheckBox);
@@ -285,15 +279,5 @@ public class BuildFrame extends JFrame {
     }
     private void exitActionPerformed() {System.exit(0);}
 
-    public class ClickListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if(e.getActionCommand() == "Find")
-                doFindText(findFirstTabString.getText());
-            else if(e.getActionCommand() == "Replace")
-                doReplaceText(findString.getText(), replaceString.getText());
-            else if(e.getActionCommand() == "Cancel")
-                exitActionPerformed();
-        }
-    }
+
 }
