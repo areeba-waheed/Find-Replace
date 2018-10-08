@@ -33,7 +33,6 @@ public class FindReplace extends JFrame {
     //buttons
     private JButton findButtonTab1;
     private JButton findButtonTab2;
-    private JButton findButtonTab3;
 
     private JButton replaceButtonTab2;
     private JButton replaceButtonTab3;
@@ -69,9 +68,6 @@ public class FindReplace extends JFrame {
     //arrays
     private ArrayList<String> wordList;
 
-    private FileSearch fileSearch;
-
-
 
     public FindReplace(){
 
@@ -81,9 +77,6 @@ public class FindReplace extends JFrame {
         createTextAreas();
         createCheckBoxes();
         buildPanels();
-        /*actionListener = new ClickListener(selectedFile, chooser, wordList,
-                findStringTab1, findStringTab2, findStringTab3, replaceStringTab2,
-                textAreaTab1, textAreaTab2, textAreaTab2);*/
         setSize(500,300);
 
     }
@@ -143,13 +136,18 @@ public class FindReplace extends JFrame {
                 textAreaTab3.setText("Searching for word '" + findStringTab3.getText() + "' in text files under: " + selectedFile.getAbsolutePath() + "\n");
                 //fileSearch = new FileSearch(selectedFile, findStringTab3.getText(), textAreaTab3);
                 try {
-                    ap.findInDirectory(selectedFile, textAreaTab3, findStringTab3);
+                    ap.findInDirectory(selectedFile, textAreaTab3, findStringTab3, false);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
                // ap.printTextArea(textAreaTab3);
             } else if(e.getActionCommand() == "Replace All") {
-                //ap.replace();
+                try {
+                    ap.replace(selectedFile, findStringTab3, replaceStringTab3, textAreaTab3);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                textAreaTab3.setText("Words Replaced, Files updated");
             }
 
         }
@@ -160,8 +158,6 @@ public class FindReplace extends JFrame {
         int result = chooser.showOpenDialog(this);
         if(result == JFileChooser.APPROVE_OPTION) {
             selectedFile = chooser.getSelectedFile();
-            //findWords(selectedFile);
-            //tab1TextArea.setText("Searching for "+ word +" in the text file named " +selectedFile.getAbsolutePath() );
         }
 
     }
@@ -185,10 +181,6 @@ public class FindReplace extends JFrame {
         replaceStringTab3 = new JTextField(22);
         filter = new JTextField(15);
 
-       /* findStringTab1.getDocument().addDocumentListener(new MyListener());
-        Preferences prefs = Preferences.userRoot().node("value");
-        findStringTab1.setText(prefs.get("key", ""));*/
-
         findStringTab1.addActionListener(actionListener);
         findStringTab2.addActionListener(actionListener);
         findStringTab3.addActionListener(actionListener);
@@ -201,20 +193,18 @@ public class FindReplace extends JFrame {
     private void createButtons(){
 
         chooser = new JFileChooser();
-
         findButtonTab1 = new JButton("Search");
         findButtonTab2 = new JButton("Find");
         //findButtonTab3 = new JButton("Find");
 
         replaceButtonTab2 = new JButton("Replace");
-        replaceButtonTab3 = new JButton("Replace");
+        replaceButtonTab3 = new JButton("Replace All");
 
         browse = new JButton("Browse");
         cancel = new JButton("Cancel");
 
         findButtonTab1.addActionListener(actionListener);
         findButtonTab2.addActionListener(actionListener);
-        //findButtonTab3.addActionListener(actionListener);
         replaceButtonTab2.addActionListener(actionListener);
         replaceButtonTab3.addActionListener(actionListener);
         browse.addActionListener(actionListener);
@@ -249,7 +239,6 @@ public class FindReplace extends JFrame {
     private void buildPanels() {
         tabbedPane = new JTabbedPane();
         getContentPane().add(tabbedPane);
-
         findTabPanel = new JPanel();
         findTabPanel();
         findReplacePanel = new JPanel();
@@ -262,7 +251,6 @@ public class FindReplace extends JFrame {
         tabbedPane.addTab("Find & Replace", findReplacePanel);
         tabbedPane.addTab("Find in All", findAllPanel);
 
-        //frame.add(tabbedPane);
     }
 
     private void findTabPanel(){

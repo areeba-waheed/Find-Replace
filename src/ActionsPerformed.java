@@ -6,30 +6,36 @@ import java.util.ArrayList;
 public class ActionsPerformed extends Component {
 
     private ArrayList<String> wordList;
-    //private File f;
+    private JTextField replace;
 
 
     public ActionsPerformed(ArrayList<String> wordList){
         this.wordList = wordList;
     }
 
-    public void replace() {
-
+    public void replace(File selectedFile, JTextField text, JTextField replace, JTextArea area) throws IOException {
+        this.replace = replace;
+        int res = popUp();
+        if(res == JOptionPane.OK_OPTION) {
+            findInDirectory(selectedFile, area, text, true);
+        }
     }
 
-    public void findInDirectory(File directory, JTextArea area, JTextField text) throws IOException {
+    public void findInDirectory(File directory, JTextArea area, JTextField text, Boolean flag) throws IOException {
 
         File[] files = new File(directory.getAbsolutePath()).listFiles();
         for(File file: files) {
             if(file.isFile()){
-                //f = file;
-                findWords(file, text.getText());
-                printTextArea(area, file);
+                if(flag) {
+                    replaceWords(file, text, replace);
+                }
+                else {
+                    findWords(file, text.getText());
+                    printTextArea(area, file);
+                }
             }
         }
     }
-
-
 
     public void findWords(File file, String word) throws IOException {
         wordList = new ArrayList<>();
@@ -53,10 +59,10 @@ public class ActionsPerformed extends Component {
 
     public void printTextArea(JTextArea area, File selectedFile) {
         if(wordList.isEmpty()) {
-            area.append("Word not Found in file: "+selectedFile.getAbsolutePath()+"\n");
+            area.append("\nWord not Found in file: "+selectedFile.getAbsolutePath()+"\n");
         }
         else {
-            area.append("Word found in file: "+selectedFile.getName()+"\n");
+            area.append("\nWord found in file: "+selectedFile.getName()+"\n");
             for (int i = 0; i < wordList.size(); i++) {
                 area.append(wordList.get(i));
             }
@@ -70,8 +76,6 @@ public class ActionsPerformed extends Component {
     }
 
     public void replaceWords(File selectedFile, JTextField findStringTab2, JTextField replaceStringTab2) throws IOException {
-        //Writer writer = new BufferedWriter();
-
         File fileToBeModified = selectedFile;
         String oldContent="";
         BufferedReader reader = new BufferedReader(new FileReader(fileToBeModified));
