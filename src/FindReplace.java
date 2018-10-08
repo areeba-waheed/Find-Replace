@@ -1,8 +1,4 @@
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,8 +7,6 @@ import java.awt.event.KeyListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class FindReplace extends JFrame {
 
@@ -87,6 +81,9 @@ public class FindReplace extends JFrame {
         createTextAreas();
         createCheckBoxes();
         buildPanels();
+        /*actionListener = new ClickListener(selectedFile, chooser, wordList,
+                findStringTab1, findStringTab2, findStringTab3, replaceStringTab2,
+                textAreaTab1, textAreaTab2, textAreaTab2);*/
         setSize(500,300);
 
     }
@@ -101,168 +98,86 @@ public class FindReplace extends JFrame {
             public void keyReleased(KeyEvent e) {}
         };
         actionListener = new FindReplace.ClickListener();
+
     }
 
-    public class ClickListener implements ActionListener {
+    public class ClickListener implements ActionListener{
+
         @Override
         public void actionPerformed(ActionEvent e) {
+            ActionsPerformed ap = new ActionsPerformed(wordList);
             if(e.getActionCommand() == "Search") {
                 openFile();
                 try {
-                    findWords(selectedFile, false, findStringTab1.getText());
+                    ap.findWords(selectedFile, findStringTab1.getText());
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                printTextArea(textAreaTab1);
+                ap.printTextArea(textAreaTab1, selectedFile);
             }
             else if(e.getActionCommand() == "Find") {
                 openFile();
                 try {
-                    findWords(selectedFile, false, findStringTab2.getText());
+                    ap.findWords(selectedFile, findStringTab2.getText());
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                printTextArea(textAreaTab2);
+                ap.printTextArea(textAreaTab2, selectedFile);
             } else if(e.getActionCommand() == "Replace") {
-                int res = popUp();
+                int res = ap.popUp();
                 if(res == JOptionPane.OK_OPTION) {
                     try {
-                        findWords(selectedFile, true, findStringTab2.getText());
+                        ap.findWords(selectedFile, findStringTab2.getText());
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
                     try {
-                        replaceWords();
+                        ap.replaceWords(selectedFile,findStringTab2, replaceStringTab2);
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
-                    textAreaTab2.setText("File updated");
+                    textAreaTab2.setText("Word(s) Replaced, File updated");
                 }
             } else if(e.getActionCommand() == "Browse") {
                 openDirectory();
                 textAreaTab3.setText("Searching for word '" + findStringTab3.getText() + "' in text files under: " + selectedFile.getAbsolutePath() + "\n");
-                fileSearch = new FileSearch(selectedFile, findStringTab3.getText(), textAreaTab3);
+                //fileSearch = new FileSearch(selectedFile, findStringTab3.getText(), textAreaTab3);
+                try {
+                    ap.findInDirectory(selectedFile, textAreaTab3, findStringTab3);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+               // ap.printTextArea(textAreaTab3);
+            } else if(e.getActionCommand() == "Replace All") {
+                //ap.replace();
+            }
 
-        }      }
-    }
-
-    private void openDirectory() {
-        chooser.setCurrentDirectory(new java.io.File("."));
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
-        int result = chooser.showOpenDialog(this);
-        if(result == JFileChooser.APPROVE_OPTION) {
-            selectedFile = chooser.getCurrentDirectory();
         }
-
-
     }
-    private int popUp() {
-        int result = JOptionPane.showConfirmDialog(null, "Are you sure ?", "Attention", JOptionPane.OK_CANCEL_OPTION);
-        return result;
-    }
-    private void printUpdatedFile(JTextArea area) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(selectedFile));
-        String line = null;
-        wordList = new ArrayList<>();
-        while((line = br.readLine()) != null) {
-            wordList.add("Line number: " + line.indexOf(line) + " "+line+"\n");
-        }
-
-    }
-
-    private void replaceWords() throws IOException {
-        //Writer writer = new BufferedWriter();
-
-        File fileToBeModified = selectedFile;
-        String oldContent="";
-        BufferedReader reader = new BufferedReader(new FileReader(fileToBeModified));
-        String line = reader.readLine();
-        while(line != null){
-            oldContent = oldContent+line+System.lineSeparator();
-            line = reader.readLine();
-        }
-        String newContent = oldContent.replaceAll(findStringTab2.getText(), replaceStringTab2.getText());
-
-        FileWriter writer = new FileWriter(fileToBeModified);
-        writer.write(newContent);
-        reader.close();
-        writer.close();
-
-
-
-
-
-    }
-
-    private void openFile() {
+    public void openFile() {
         chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int result = chooser.showOpenDialog(this);
         if(result == JFileChooser.APPROVE_OPTION) {
             selectedFile = chooser.getSelectedFile();
-             //findWords(selectedFile);
+            //findWords(selectedFile);
             //tab1TextArea.setText("Searching for "+ word +" in the text file named " +selectedFile.getAbsolutePath() );
         }
 
     }
-
-    private void printTextArea(JTextArea area) {
-        for(int i =0; i< wordList.size(); i++) {
-            area.append(wordList.get(i));
-        }
-    }
-
-    private void findWords(File file, Boolean flag, String word) throws IOException {
-        //JTextArea textArea = area;
-        //String word = findStringTab1.getText();
-        wordList = new ArrayList<>();
-        //FileReader fr = new FileReader(file);
-        try {
-            String s="";
-            int count =0;
-            BufferedReader bf = new BufferedReader(new FileReader(file));
-            while( (s=bf.readLine() )!=null) {
-                count++;
-                //if (wholeCaseTab1.isSelected()) {
-                    //word = word + " ";
-                    if (s.contains(word)) {
-
-                        wordList.add("Line number: " + count + " " + s + "\n");
-                  //  }
-                //}
-                //else {
-                    //if (s.contains(word)) {
-
-                        //wordList.add("Line number: " + count + " " + s + "\n");
-                  //  }
-                }
-               //textArea.append("Line number: " +count+" "+ s +"\n");
-
-                    /*if(flag == true) {
-                        s.replaceAll(word, replaceStringTab2.getText());
-
-                    }
-                    else{
-                        wordList.add("Line number: " + count + " "+s+"\n");
-                    }*/
-
-                    //lineNumber.add(count);
-                }
-
-
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void openDirectory() {
+        chooser.setCurrentDirectory(new java.io.File("user.home"));
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+       // chooser.setAcceptAllFileFilterUsed(false);
+        int result = chooser.showOpenDialog(this);
+        if(result == JFileChooser.APPROVE_OPTION) {
+            selectedFile = chooser.getSelectedFile();
         }
 
     }
 
     private void createTextFields(){
         wordList = new ArrayList<>();
-
         findStringTab1 = new JTextField(25);
         findStringTab2 = new JTextField(25);
         findStringTab3 = new JTextField(23);
@@ -282,29 +197,6 @@ public class FindReplace extends JFrame {
         filter.addActionListener(actionListener);
     }
 
-    class MyListener implements DocumentListener {
-
-        @Override
-        public void insertUpdate(DocumentEvent e) {
-
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-            final Document document = e.getDocument();
-            Preferences prefs = Preferences.userRoot().node("value");
-            try{
-                prefs.put("key", document.getText(0, document.getLength()));
-            }catch(BadLocationException event) {
-                event.printStackTrace();
-            }
-        }
-    }
 
     private void createButtons(){
 

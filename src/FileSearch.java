@@ -29,14 +29,14 @@ public class FileSearch extends SwingWorker<Integer, String> {
         int matches =0;
         publish("Listing all files under the directory " + directory);
 
+        String[] children = directory.list();
         final List<File> files = new ArrayList<>(FileUtils.listFiles(directory, new SuffixFileFilter(".txt"), TrueFileFilter.TRUE));
-        for(int i =0; i<files.size(); i++) {
+        for(int i=0; i<files.size(); i++) {
             FileSearch.failIfInterrupted();
             final File file = files.get(i);
-            publish ("Seatching file: "+ file);
+            publish ("Searching file: "+ file);
             String text = FileUtils.readFileToString(file);
             matches += StringUtils.countMatches(text, word);
-
         }
         return matches;
     }
