@@ -1,43 +1,20 @@
+package main;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ActionsPerformed extends Component {
 
     private ArrayList<String> wordList;
-    private JTextField replace;
-
 
     public ActionsPerformed(ArrayList<String> wordList){
         this.wordList = wordList;
     }
 
-    public void replace(File selectedFile, JTextField text, JTextField replace, JTextArea area) throws IOException {
-        this.replace = replace;
-        int res = popUp();
-        if(res == JOptionPane.OK_OPTION) {
-            findInDirectory(selectedFile, area, text, true);
-        }
-    }
-
-    public void findInDirectory(File directory, JTextArea area, JTextField text, Boolean flag) throws IOException {
-
-        File[] files = new File(directory.getAbsolutePath()).listFiles();
-        for(File file: files) {
-            if(file.isFile()){
-                if(flag) {
-                    replaceWords(file, text, replace);
-                }
-                else {
-                    findWords(file, text.getText());
-                    printTextArea(area, file);
-                }
-            }
-        }
-    }
-
-    public void findWords(File file, String word) throws IOException {
+    public void findWords(File file, String word, JCheckBox wholeCase) throws IOException {
         wordList = new ArrayList<>();
         try {
             String s="";
@@ -45,9 +22,19 @@ public class ActionsPerformed extends Component {
             BufferedReader bf = new BufferedReader(new FileReader(file));
             while( (s=bf.readLine() )!=null) {
                 count++;
-                if (s.contains(word)) {
-                    wordList.add("Line number: " + count + " " + s + "\n");
+                if(wholeCase.isSelected()) {
+                    boolean found = Arrays.asList(s.split(" ")).contains(word);
+                    if(found) {
+                        wordList.add("Line number: " + count + " " + s + "\n");
+                    }
                 }
+                else {
+                    if (s.contains(word)) {
+                        wordList.add("Line number: " + count + " " + s + "\n");
+                    }
+                }
+
+
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -56,10 +43,13 @@ public class ActionsPerformed extends Component {
         }
 
     }
+    public int getWordListSize() {
+        return wordList.size();
+    }
 
     public void printTextArea(JTextArea area, File selectedFile) {
         if(wordList.isEmpty()) {
-            area.append("\nWord not Found in file: "+selectedFile.getAbsolutePath()+"\n");
+            area.append("\nWord not Found in file: "+selectedFile.getAbsolutePath()+"\n\n");
         }
         else {
             area.append("\nWord found in file: "+selectedFile.getName()+"\n");
@@ -75,30 +65,27 @@ public class ActionsPerformed extends Component {
         return result;
     }
 
-    public void replaceWords(File selectedFile, JTextField findStringTab2, JTextField replaceStringTab2) throws IOException {
+    public void replaceWords(File selectedFile, String findStringTab2, String replaceStringTab2, JCheckBox wholeCase) throws IOException {
         File fileToBeModified = selectedFile;
         String oldContent="";
         BufferedReader reader = new BufferedReader(new FileReader(fileToBeModified));
         String line = reader.readLine();
+        String newContent = "";
         while(line != null){
             oldContent = oldContent+line+System.lineSeparator();
             line = reader.readLine();
         }
-        String newContent = oldContent.replaceAll(findStringTab2.getText(), replaceStringTab2.getText());
+        if(wholeCase.isSelected()) {
+            String temp = "\\b" + findStringTab2 + "\\b";
+            newContent = oldContent.replaceAll(temp, replaceStringTab2);
+        }
+        else {
+             newContent= oldContent.replaceAll(findStringTab2, replaceStringTab2);
+        }
 
         FileWriter writer = new FileWriter(fileToBeModified);
         writer.write(newContent);
         reader.close();
         writer.close();
-
-
-
-
-
     }
-
-
-
-
-
 }

@@ -1,3 +1,5 @@
+package main;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -6,9 +8,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.prefs.Preferences;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 public class FindReplace extends JFrame {
+
+    static Logger log ;
 
     private JFrame frame;
     private JTabbedPane tabbedPane;
@@ -68,6 +73,10 @@ public class FindReplace extends JFrame {
     //arrays
     private ArrayList<String> wordList;
 
+    private FileSearch fileSearch;
+
+    private String[] filters;
+
 
     public FindReplace(){
 
@@ -81,6 +90,25 @@ public class FindReplace extends JFrame {
 
     }
 
+    private void getFilters() {
+        String temp = filter.getText();
+        String str ="";
+
+        for(int i =0; i<temp.length(); i++) {
+            if(temp.charAt(i) != ',') {
+               str += temp.charAt(i);
+               log.info(str);
+            }
+            else {
+                filters[i] = str;
+                str= "";
+            }
+
+        }
+        filters[20] = str;
+        log.info(filter.getText());
+        log.info(Arrays.toString(filters));
+    }
     private void createListeners(){
         keyListener = new KeyListener() {
             @Override
@@ -99,56 +127,58 @@ public class FindReplace extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             ActionsPerformed ap = new ActionsPerformed(wordList);
-            if(e.getActionCommand() == "Search") {
-                openFile();
-                try {
-                    ap.findWords(selectedFile, findStringTab1.getText());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                ap.printTextArea(textAreaTab1, selectedFile);
-            }
-            else if(e.getActionCommand() == "Find") {
-                openFile();
-                try {
-                    ap.findWords(selectedFile, findStringTab2.getText());
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                ap.printTextArea(textAreaTab2, selectedFile);
-            } else if(e.getActionCommand() == "Replace") {
-                int res = ap.popUp();
-                if(res == JOptionPane.OK_OPTION) {
+            getFilters();
+                if (e.getActionCommand() == "Search") {
+                    openFile();
                     try {
-                        ap.findWords(selectedFile, findStringTab2.getText());
+                        ap.findWords(selectedFile, findStringTab1.getText(), wholeCaseTab1);
+                        log.info("Search File: " + selectedFile.getAbsolutePath());
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
+                    ap.printTextArea(textAreaTab1, selectedFile);
+                } else if (e.getActionCommand() == "Find") {
+                    openFile();
+                    log.info("Opens File: " + selectedFile.getAbsolutePath());
                     try {
-                        ap.replaceWords(selectedFile,findStringTab2, replaceStringTab2);
+                        ap.findWords(selectedFile, findStringTab2.getText(), wholeCaseTab2);
+                        log.info("Find " + findStringTab2.getText() + " in the File " + selectedFile.getAbsolutePath());
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
-                    textAreaTab2.setText("Word(s) Replaced, File updated");
+                    ap.printTextArea(textAreaTab2, selectedFile);
+                } else if (e.getActionCommand() == "Replace") {
+                    int res = ap.popUp();
+                    log.info("Are You Sure you want to delete all instances of this word? ");
+                    if (res == JOptionPane.OK_OPTION) {
+                        try {
+                            ap.findWords(selectedFile, findStringTab2.getText(), wholeCaseTab2);
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        try {
+                            ap.replaceWords(selectedFile, findStringTab2.getText(), replaceStringTab2.getText(), wholeCaseTab2);
+                            log.info("Replaced Word(s) in File: " + selectedFile.getAbsolutePath());
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        textAreaTab2.setText("Word(s) Replaced, File updated");
+                    }
+                } else if (e.getActionCommand() == "Browse") {
+                    openDirectory();
+                    //textAreaTab3.setText("Searching for word '" + findStringTab3.getText() + "' in text files under: " + selectedFile.getAbsolutePath() + "\n");
+                    log.info("Searching for word '" + findStringTab3.getText() + "' in text files under: " + selectedFile.getAbsolutePath() + "\n");
+
+                    fileSearch = new main.FileSearch(selectedFile, findStringTab3, replaceStringTab3, textAreaTab3, wholeCaseTab3, false, filters);
+                    fileSearch.execute();
+                } else if (e.getActionCommand() == "Replace All") {
+                    fileSearch = new main.FileSearch(selectedFile, findStringTab3, replaceStringTab3, textAreaTab3, wholeCaseTab3, true, filters);
+                    int res = ap.popUp();
+                    if (res == JOptionPane.OK_OPTION) {
+                        fileSearch.execute();
+                    }
+                    textAreaTab3.setText("Words Replaced, Files updated");
                 }
-            } else if(e.getActionCommand() == "Browse") {
-                openDirectory();
-                textAreaTab3.setText("Searching for word '" + findStringTab3.getText() + "' in text files under: " + selectedFile.getAbsolutePath() + "\n");
-                //fileSearch = new FileSearch(selectedFile, findStringTab3.getText(), textAreaTab3);
-                try {
-                    ap.findInDirectory(selectedFile, textAreaTab3, findStringTab3, false);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-               // ap.printTextArea(textAreaTab3);
-            } else if(e.getActionCommand() == "Replace All") {
-                try {
-                    ap.replace(selectedFile, findStringTab3, replaceStringTab3, textAreaTab3);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-                textAreaTab3.setText("Words Replaced, Files updated");
-            }
 
         }
     }
@@ -172,8 +202,14 @@ public class FindReplace extends JFrame {
 
     }
 
+    //public JCheckBox getWordCase1() { return this.wholeCaseTab1;}
+
     private void createTextFields(){
+
         wordList = new ArrayList<>();
+        log = Logger.getLogger(FindReplace.class.getName());
+        filters = new String[100];
+
         findStringTab1 = new JTextField(25);
         findStringTab2 = new JTextField(25);
         findStringTab3 = new JTextField(23);
