@@ -4,10 +4,16 @@ import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
+
+/**
+ *  Areeba Waheed
+ *  OCT 9, 2018
+ *  Comp 585: GUI
+ *  Project 2: Find/Replace Finder
+ *
+ *  Searches Files in a Directory using SwingWorker
+ **/
 
 public class FileSearch extends SwingWorker<Integer, String> {
     private File directory;
@@ -41,10 +47,7 @@ public class FileSearch extends SwingWorker<Integer, String> {
     @Override
     protected Integer doInBackground() throws Exception {
         int matches =0;
-        publish("Listing all files under the directory " + directory);
-
-        //String[] children = directory.list();
-        //new String[] {"java", "txt", "cfg", "html", "css"}
+        publish("\nListing all files under the directory " + directory);
 
         final List<File> files = new ArrayList<>(FileUtils.listFiles(directory, filters, true));
         for(int i=0, size = files.size(); i<size; i++) {
@@ -52,16 +55,11 @@ public class FileSearch extends SwingWorker<Integer, String> {
             final File file = files.get(i);
             //publish ("Searching file: "+ file);
             if(flag == true) {
-
-                    ap.replaceWords(file, word.getText(), replace.getText(), wholeCase);
-
-                //area.setText("Files Updated");
+                ap.replaceWords(file, word.getText(), replace.getText(), wholeCase);
             }else {
                 ap.findWords(file, word.getText(), wholeCase);
                 ap.printTextArea(area, file);
             }
-            //final String text = FileUtils.readFileToString(file);
-            //matches += StringUtils.countMatches(text, word);
             setProgress((i+1) *100/size);
         }
         return matches;
@@ -69,13 +67,9 @@ public class FileSearch extends SwingWorker<Integer, String> {
 
     @Override
     protected void process(final List<String> chunks) {
-        // Updates the messages text area
         for (final String string : chunks) {
             area.append(string);
             area.append("\n");
         }
     }
-
-
-
 }

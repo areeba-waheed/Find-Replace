@@ -6,6 +6,15 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ *  Areeba Waheed
+ *  OCT 9, 2018
+ *  Comp 585: GUI
+ *  Project 2: Find/Replace Finder
+ *
+ *  Performs all Actions
+ **/
+
 public class ActionsPerformed extends Component {
 
     private ArrayList<String> wordList;
@@ -33,8 +42,6 @@ public class ActionsPerformed extends Component {
                         wordList.add("Line number: " + count + " " + s + "\n");
                     }
                 }
-
-
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

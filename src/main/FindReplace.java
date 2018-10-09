@@ -11,9 +11,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+/**
+ *  Areeba Waheed
+ *  OCT 9, 2018
+ *  Comp 585: GUI
+ *  Project 2: Find/Replace Finder
+ *
+ *  Builds Frame
+ **/
+
 public class FindReplace extends JFrame {
 
     static Logger log ;
+    private FileSearch fileSearch;
 
     private JFrame frame;
     private JTabbedPane tabbedPane;
@@ -55,7 +65,6 @@ public class FindReplace extends JFrame {
     private JScrollPane paneTab2;
     private JScrollPane paneTab3;
 
-
     //caseBox
     private JCheckBox matchCaseTab1;
     private JCheckBox matchCaseTab2;
@@ -72,14 +81,10 @@ public class FindReplace extends JFrame {
 
     //arrays
     private ArrayList<String> wordList;
-
-    private FileSearch fileSearch;
-
     private String[] filters;
 
 
     public FindReplace(){
-
         createListeners();
         createTextFields();
         createButtons();
@@ -90,25 +95,7 @@ public class FindReplace extends JFrame {
 
     }
 
-    private void getFilters() {
-        String temp = filter.getText();
-        String str ="";
 
-        for(int i =0; i<temp.length(); i++) {
-            if(temp.charAt(i) != ',') {
-               str += temp.charAt(i);
-               log.info(str);
-            }
-            else {
-                filters[i] = str;
-                str= "";
-            }
-
-        }
-        filters[20] = str;
-        log.info(filter.getText());
-        log.info(Arrays.toString(filters));
-    }
     private void createListeners(){
         keyListener = new KeyListener() {
             @Override
@@ -128,40 +115,32 @@ public class FindReplace extends JFrame {
         public void actionPerformed(ActionEvent e) {
             ActionsPerformed ap = new ActionsPerformed(wordList);
             getFilters();
+            try {
                 if (e.getActionCommand() == "Search") {
                     openFile();
-                    try {
+
                         ap.findWords(selectedFile, findStringTab1.getText(), wholeCaseTab1);
                         log.info("Search File: " + selectedFile.getAbsolutePath());
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+
                     ap.printTextArea(textAreaTab1, selectedFile);
                 } else if (e.getActionCommand() == "Find") {
                     openFile();
                     log.info("Opens File: " + selectedFile.getAbsolutePath());
-                    try {
+
                         ap.findWords(selectedFile, findStringTab2.getText(), wholeCaseTab2);
                         log.info("Find " + findStringTab2.getText() + " in the File " + selectedFile.getAbsolutePath());
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+
                     ap.printTextArea(textAreaTab2, selectedFile);
                 } else if (e.getActionCommand() == "Replace") {
                     int res = ap.popUp();
                     log.info("Are You Sure you want to delete all instances of this word? ");
                     if (res == JOptionPane.OK_OPTION) {
-                        try {
                             ap.findWords(selectedFile, findStringTab2.getText(), wholeCaseTab2);
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                        try {
+
+
                             ap.replaceWords(selectedFile, findStringTab2.getText(), replaceStringTab2.getText(), wholeCaseTab2);
                             log.info("Replaced Word(s) in File: " + selectedFile.getAbsolutePath());
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
+
                         textAreaTab2.setText("Word(s) Replaced, File updated");
                     }
                 } else if (e.getActionCommand() == "Browse") {
@@ -179,8 +158,30 @@ public class FindReplace extends JFrame {
                     }
                     textAreaTab3.setText("Words Replaced, Files updated");
                 }
+            }catch(IOException e1) {
+                e1.printStackTrace();
+
+            }
+        }
+    }
+    private void getFilters() {
+        String temp = filter.getText();
+        String str ="";
+
+        for(int i =0; i<temp.length(); i++) {
+            if(temp.charAt(i) != ',') {
+                str += temp.charAt(i);
+                log.info(str);
+            }
+            else {
+                filters[i] = str;
+                str= "";
+            }
 
         }
+        filters[20] = str;
+        log.info(filter.getText());
+        log.info(Arrays.toString(filters));
     }
     public void openFile() {
         chooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -201,8 +202,6 @@ public class FindReplace extends JFrame {
         }
 
     }
-
-    //public JCheckBox getWordCase1() { return this.wholeCaseTab1;}
 
     private void createTextFields(){
 
